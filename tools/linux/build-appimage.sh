@@ -19,6 +19,6 @@ cmake -S "$source_dir" -B "$build_dir" -G Ninja \
     -DYUZU_BUILD_PRESET=generic \
     -DENABLE_UPDATE_CHECKER=OFF \
     "$@"
-cmake --build "$build_dir" --target yuzu yuzu-cmd tests --parallel "$jobs"
+cmake --build "$build_dir" --target yuzu yuzu-cmd tests update_checker_tests --parallel "$jobs"
 ctest --test-dir "$build_dir" --output-on-failure --no-tests=error
 bash "$source_dir/tools/linux/package-appimage.sh" "$build_dir" "$output_dir"

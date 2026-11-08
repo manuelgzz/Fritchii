@@ -12,6 +12,7 @@
         "min_version": "1.84",
         "package": "Boost",
         "repo": "eden-emulator/ext-boost",
+        "url": "https://api.github.com/repos/eden-emulator/ext-boost/releases/assets/564326283",
         "version": "1.92.0"
     },
     "boost_headers": {

@@ -178,6 +178,10 @@ endfunction()
 # And retry 5 times
 function(cpm_download url file)
     echo("Downloading ${url} to ${file}")
+    set(download_headers)
+    if(url MATCHES "^https://api[.]github[.]com/repos/[^/]+/[^/]+/releases/assets/[0-9]+$")
+        list(APPEND download_headers HTTPHEADER "Accept: application/octet-stream")
+    endif()
     list(LENGTH ARGN argn_len)
     if(argn_len GREATER 0)
         list(GET ARGN 0 hash)
@@ -189,6 +193,7 @@ function(cpm_download url file)
     foreach(i RANGE 5)
         file(DOWNLOAD ${url} ${file}
             ${args}
+            ${download_headers}
             STATUS ret)
 
         list(GET ret 0 code)
