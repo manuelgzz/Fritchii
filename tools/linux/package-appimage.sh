@@ -84,7 +84,16 @@ export EXTRA_PLATFORM_PLUGINS='libqwayland-egl.so;libqwayland-generic.so'
 export LDAI_VERSION="v${version}-${commit:0:10}"
 export OUTPUT="$output_dir/$name.AppImage"
 export ARCH="$arch"
+# linuxdeploy excludes these desktop libraries by default, but minimal gaming
+# distributions do not necessarily install them. Keep GPU drivers on the host.
+extra_libraries=()
+for library in libusb-1.0.so.0 libOpenGL.so.0 libharfbuzz.so.0 libfribidi.so.0 libfontconfig.so.1 libasound.so.2; do
+    library_path=$(ldconfig -p | awk -v name="$library" '$1 == name {print $NF; exit}')
+    test -n "$library_path"
+    extra_libraries+=(--library "$library_path")
+done
 "$tools_dir/linuxdeploy-$arch.AppImage" --appdir "$app_dir" \
+    "${extra_libraries[@]}" \
     --executable "$build_dir/bin/lichii" \
     --executable "$build_dir/bin/eden-cli" \
     --desktop-file "$desktop" \
