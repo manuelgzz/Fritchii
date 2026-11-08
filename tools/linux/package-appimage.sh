@@ -16,7 +16,12 @@ for binary in lichii eden-cli; do
 done
 
 version=$(head -n 1 "$source_dir/dist/frizti_version.txt" | tr -d '\r\n')
-commit=$(git -C "$source_dir" rev-parse HEAD)
+commit=$(sed -n 's/^#define GIT_REV "\([^"]*\)"/\1/p' "$build_dir/src/common/scm_rev.cpp")
+package_commit=$(git -C "$source_dir" rev-parse HEAD)
+if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "Missing source revision in the configured build." >&2
+    exit 1
+fi
 compiler=$(sed -n 's/^CMAKE_CXX_COMPILER:FILEPATH=//p;s/^CMAKE_CXX_COMPILER:STRING=//p' \
     "$build_dir/CMakeCache.txt" | head -n 1)
 name="Fritchii-v${version}-Linux-${arch}"
@@ -36,6 +41,11 @@ for tool in linuxdeploy linuxdeploy-plugin-qt; do
     fi
     chmod +x "$target"
 done
+runtime="$tools_dir/runtime-$arch"
+if [[ ! -s "$runtime" ]]; then
+    python3 "$source_dir/tools/linux/fetch-release-asset.py" \
+        AppImage/type2-runtime continuous "runtime-$arch" "$runtime"
+fi
 
 cp "$source_dir/LICENSE.txt" "$app_dir/usr/share/doc/fritchii/"
 cp -a "$source_dir/LICENSES" "$app_dir/usr/share/doc/fritchii/"
@@ -48,6 +58,7 @@ sed -i 's/^Name=Lichii$/Name=Fritchii/; s/^Keywords=.*/Keywords=Nintendo;Switch;
 cp "$source_dir/dist/fritchii.png" "$tools_dir/io.github.zortos293.lichii.png"
 {
     printf 'Version: %s\nSource: https://github.com/manuelgzz/Fritchii\nCommit: %s\n' "$version" "$commit"
+    printf 'Packaging commit: %s\n' "$package_commit"
     printf 'Upstream: https://github.com/Frizti/Fritchii/tree/fritchii-v4.1\n'
     printf 'Architecture: %s\n' "$arch"
     getconf GNU_LIBC_VERSION
@@ -57,7 +68,7 @@ cp "$source_dir/dist/fritchii.png" "$tools_dir/io.github.zortos293.lichii.png"
     sed -n 's/^CMAKE_EXE_LINKER_FLAGS:STRING=/Linker flags: /p;s/^ENABLE_LTO:BOOL=/LTO: /p;s/^YUZU_BUILD_PRESET:STRING=/CPU preset: /p' \
         "$build_dir/CMakeCache.txt"
     sha256sum "$source_dir/eglantine.profdata"
-    sha256sum "$tools_dir"/*.AppImage
+    sha256sum "$tools_dir"/*.AppImage "$runtime"
 } > "$app_dir/usr/share/fritchii/build-info.txt"
 cp "$app_dir/usr/share/fritchii/build-info.txt" "$output_dir/$name-build-info.txt"
 if [[ -f "$build_dir/Testing/Temporary/LastTest.log" ]]; then
@@ -65,6 +76,7 @@ if [[ -f "$build_dir/Testing/Temporary/LastTest.log" ]]; then
 fi
 
 export APPIMAGE_EXTRACT_AND_RUN=1
+export LDAI_RUNTIME_FILE="$runtime"
 export QMAKE=${QMAKE:-$(command -v qmake6 || command -v qmake)}
 export EXTRA_QT_MODULES=waylandcompositor
 export EXTRA_PLATFORM_PLUGINS='libqwayland-egl.so;libqwayland-generic.so'
