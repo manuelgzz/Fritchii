@@ -52,8 +52,9 @@ Set `CC`, `CXX`, `BUILD_DIR`, `OUTPUT_DIR` or `QMAKE` when using a custom toolch
 or Qt installation. Extra arguments go to CMake, for example
 `-DCMAKE_PREFIX_PATH=/opt/Qt/6.8.3/gcc_64`.
 `LLVM_BIN` selects the LLVM tools directory (default `/usr/lib/llvm-23/bin`).
-`BUILD_PGO=0` disables the bundled profile. Link jobs are serialized to limit
-ThinLTO memory use while compilation remains parallel.
+`BUILD_PGO=0` disables the bundled profile. ThinLTO caches native objects in the
+build directory for subsequent links. `BUILD_LINK_JOBS` bounds concurrent links
+(default 2); use 1 on machines with limited memory.
 
 The script builds the GUI, CLI and unit tests, runs CTest, then packages Qt,
 Wayland/X11 platform plugins, shared dependencies and license notices using

@@ -4,8 +4,10 @@ set -euo pipefail
 
 source_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 build_dir=${BUILD_DIR:-"$source_dir/build/linux-appimage"}
+build_dir=$(realpath -m -- "$build_dir")
 output_dir=${OUTPUT_DIR:-"$source_dir/build/appimage-output"}
 jobs=${BUILD_JOBS:-2}
+link_jobs=${BUILD_LINK_JOBS:-2}
 llvm_bin=${LLVM_BIN:-/usr/lib/llvm-23/bin}
 if [[ -d "$llvm_bin" ]]; then
     export PATH="$llvm_bin:$PATH"
@@ -22,6 +24,7 @@ cmake -S "$source_dir" -B "$build_dir" -G Ninja \
     -DCMAKE_C_COMPILER="${CC:-clang}" \
     -DCMAKE_CXX_COMPILER="${CXX:-clang++}" \
     "-DCMAKE_C_FLAGS=$profile_flags" "-DCMAKE_CXX_FLAGS=$profile_flags" \
+    "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld -Wl,--thinlto-cache-dir=\"$build_dir/thinlto-cache\"" \
     -DBUILD_TESTING=ON -DYUZU_TESTS=ON \
     -DENABLE_QT=ON -DYUZU_CMD=ON \
     -DYUZU_ROOM=OFF -DYUZU_ROOM_STANDALONE=OFF \
@@ -29,7 +32,7 @@ cmake -S "$source_dir" -B "$build_dir" -G Ninja \
     -DVulkanHeaders_FORCE_BUNDLED=ON -DVulkanUtilityLibraries_FORCE_BUNDLED=ON \
     -DYUZU_BUILD_PRESET=generic \
     -DENABLE_LTO=ON -DUSE_FASTER_LINKER=ON \
-    -DCMAKE_JOB_POOLS=appimage_link=1 -DCMAKE_JOB_POOL_LINK=appimage_link \
+    "-DCMAKE_JOB_POOLS=appimage_link=$link_jobs" -DCMAKE_JOB_POOL_LINK=appimage_link \
     -DENABLE_UPDATE_CHECKER=OFF \
     "$@"
 cmake --build "$build_dir" --target yuzu yuzu-cmd tests update_checker_tests --parallel "$jobs"

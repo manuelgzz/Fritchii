@@ -54,6 +54,8 @@ cp "$source_dir/dist/fritchii.png" "$tools_dir/io.github.zortos293.lichii.png"
     "${compiler:-${CXX:-clang++}}" --version | head -n 1
     cmake --version | head -n 1
     sed -n 's/^CMAKE_CXX_FLAGS:STRING=/Compiler flags: /p' "$build_dir/CMakeCache.txt"
+    sed -n 's/^CMAKE_EXE_LINKER_FLAGS:STRING=/Linker flags: /p;s/^ENABLE_LTO:BOOL=/LTO: /p;s/^YUZU_BUILD_PRESET:STRING=/CPU preset: /p' \
+        "$build_dir/CMakeCache.txt"
     sha256sum "$source_dir/eglantine.profdata"
     sha256sum "$tools_dir"/*.AppImage
 } > "$app_dir/usr/share/fritchii/build-info.txt"
