@@ -21,14 +21,18 @@ gameplay and performance still depend on the Linux GPU driver and require testin
   hooks are platform-specific. Automatic updates are disabled for this AppImage:
   the upstream update sources serve other forks or Windows packages. Download
   updates from this fork's releases instead.
-- The generic x86_64 build uses Clang ThinLTO and lld, and avoids `-march=native`.
-  It is not the Windows PGO build and does not claim the same performance. The
-  repository's PGO profile needs a newer LLVM reader than Ubuntu's Clang 18.
+- Windows CPU topology/pinning and the DWM display-refresh query are also guarded
+  by Win32 checks upstream. Linux keeps its existing scheduling/presentation paths;
+  matching those optimizations needs a Linux implementation and hardware benchmarks.
+- The generic x86_64 build uses LLVM 23, the repository's PGO profile, ThinLTO and
+  lld, and avoids `-march=native`. It does not claim the same performance as
+  Windows. Clang 18 crashes on the current ioctl templates and cannot read the
+  profile; the workflow installs LLVM 23 from apt.llvm.org.
 
 ## Build
 
 Build on Ubuntu 24.04 (glibc 2.39) for an AppImage targeting that baseline. Use
-CMake 3.31+, Clang, LLVM tools, lld, Ninja, patch, Python, pkg-config and the development dependencies in
+CMake 3.31+, Clang/LLVM/lld 23, Ninja, patch, Python, pkg-config and the development dependencies in
 [Deps.md](Deps.md). Install Qt Charts, Qt tools, Qt Wayland and
 `qt6-wayland-dev`, as well as FFmpeg, PulseAudio/ALSA, libudev, libusb, OpenSSL,
 Boost context/fiber, glslang and SPIR-V tools. The build downloads additional
@@ -41,6 +45,9 @@ BUILD_JOBS=2 bash tools/linux/build-appimage.sh
 Set `CC`, `CXX`, `BUILD_DIR`, `OUTPUT_DIR` or `QMAKE` when using a custom toolchain
 or Qt installation. Extra arguments go to CMake, for example
 `-DCMAKE_PREFIX_PATH=/opt/Qt/6.8.3/gcc_64`.
+`LLVM_BIN` selects the LLVM tools directory (default `/usr/lib/llvm-23/bin`).
+`BUILD_PGO=0` disables the bundled profile. Link jobs are serialized to limit
+ThinLTO memory use while compilation remains parallel.
 
 The script builds the GUI, CLI and unit tests, runs CTest, then packages Qt,
 Wayland/X11 platform plugins, shared dependencies and license notices using
@@ -67,3 +74,7 @@ chmod +x Fritchii-v4.1-Linux-x86_64.AppImage
 For systems without FUSE, set `APPIMAGE_EXTRACT_AND_RUN=1`. The host still needs
 a compatible GPU driver and Vulkan loader. No games, keys, firmware or NVIDIA
 proprietary runtime files are bundled.
+
+The CI workflow also starts the packaged X11 GUI under Xvfb with isolated user
+data. Wayland and real GPU/gameplay behavior still require a physical check.
+See the [ROG Ally test guide](Pruebas-ROG-Ally.md) for that next step.

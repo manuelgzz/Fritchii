@@ -17,6 +17,8 @@ done
 
 version=$(head -n 1 "$source_dir/dist/frizti_version.txt" | tr -d '\r\n')
 commit=$(git -C "$source_dir" rev-parse HEAD)
+compiler=$(sed -n 's/^CMAKE_CXX_COMPILER:FILEPATH=//p;s/^CMAKE_CXX_COMPILER:STRING=//p' \
+    "$build_dir/CMakeCache.txt" | head -n 1)
 name="Fritchii-v${version}-Linux-${arch}"
 tools_dir="$build_dir/appimage-tools"
 app_dir="$build_dir/Fritchii.AppDir"
@@ -39,20 +41,26 @@ cp "$source_dir/LICENSE.txt" "$app_dir/usr/share/doc/fritchii/"
 cp -a "$source_dir/LICENSES" "$app_dir/usr/share/doc/fritchii/"
 cp "$source_dir/externals/FidelityFX-SDK/LICENSE.txt" \
     "$app_dir/usr/share/doc/fritchii/LICENSE-FidelityFX-SDK.txt"
-cp "$source_dir/dist/io.github.zortos293.lichii.desktop" "$tools_dir/fritchii.desktop"
+desktop="$tools_dir/io.github.zortos293.lichii.desktop"
+cp "$source_dir/dist/io.github.zortos293.lichii.desktop" "$desktop"
 sed -i 's/^Name=Lichii$/Name=Fritchii/; s/^Keywords=.*/Keywords=Nintendo;Switch;Fritchii;Lichii;/' \
-    "$tools_dir/fritchii.desktop"
+    "$desktop"
 cp "$source_dir/dist/fritchii.png" "$tools_dir/io.github.zortos293.lichii.png"
 {
     printf 'Version: %s\nSource: https://github.com/manuelgzz/Fritchii\nCommit: %s\n' "$version" "$commit"
     printf 'Upstream: https://github.com/Frizti/Fritchii/tree/fritchii-v4.1\n'
     printf 'Architecture: %s\n' "$arch"
     getconf GNU_LIBC_VERSION
-    "${CXX:-clang++}" --version | head -n 1
+    "${compiler:-${CXX:-clang++}}" --version | head -n 1
     cmake --version | head -n 1
+    sed -n 's/^CMAKE_CXX_FLAGS:STRING=/Compiler flags: /p' "$build_dir/CMakeCache.txt"
+    sha256sum "$source_dir/eglantine.profdata"
     sha256sum "$tools_dir"/*.AppImage
 } > "$app_dir/usr/share/fritchii/build-info.txt"
 cp "$app_dir/usr/share/fritchii/build-info.txt" "$output_dir/$name-build-info.txt"
+if [[ -f "$build_dir/Testing/Temporary/LastTest.log" ]]; then
+    cp "$build_dir/Testing/Temporary/LastTest.log" "$output_dir/unit-tests.log"
+fi
 
 export APPIMAGE_EXTRACT_AND_RUN=1
 export QMAKE=${QMAKE:-$(command -v qmake6 || command -v qmake)}
@@ -64,7 +72,7 @@ export ARCH="$arch"
 "$tools_dir/linuxdeploy-$arch.AppImage" --appdir "$app_dir" \
     --executable "$build_dir/bin/lichii" \
     --executable "$build_dir/bin/eden-cli" \
-    --desktop-file "$tools_dir/fritchii.desktop" \
+    --desktop-file "$desktop" \
     --icon-file "$tools_dir/io.github.zortos293.lichii.png" \
     --plugin qt --output appimage
 test -s "$OUTPUT"

@@ -34,7 +34,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            clang llvm lld g++ cmake ninja-build curl git patch pkg-config autoconf automake \
+            g++ cmake ninja-build curl git patch pkg-config autoconf automake \
             libtool nasm qt6-base-private-dev qt6-charts-dev qt6-tools-dev \
             qt6-wayland-dev qt6-wayland libavfilter-dev libavcodec-dev libswscale-dev \
             libva-dev libvdpau-dev libboost-dev libboost-fiber-dev libboost-context-dev \
@@ -44,6 +44,12 @@ jobs:
             libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
             libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 \
             libxcb-xinerama0 libxcb-xkb1 python3-venv xz-utils xvfb xauth patchelf file
+          curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key |
+            sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
+          echo 'deb https://apt.llvm.org/noble/ llvm-toolchain-noble-23 main' |
+            sudo tee /etc/apt/sources.list.d/llvm.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-23 llvm-23 lld-23
           python3 -m venv "$RUNNER_TEMP/build-tools"
           "$RUNNER_TEMP/build-tools/bin/pip" install cmake==3.31.6
           echo "$RUNNER_TEMP/build-tools/bin" >> "$GITHUB_PATH"
