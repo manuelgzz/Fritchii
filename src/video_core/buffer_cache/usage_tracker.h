@@ -74,6 +74,9 @@ public:
         if (page_end < page || page_end >= pages.size()) {
             return false;
         }
+        if (page == page_end) {
+            return IsPageUsed(page, offset, size);
+        }
         if (IsPageUsed(page, offset, size)) {
             return true;
         }

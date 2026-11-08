@@ -166,8 +166,14 @@ TEST_CASE("Usage tracker never misses an overlapping byte range",
             const auto [offset, size] = range();
             const bool overlaps = std::any_of(used.begin() + offset, used.begin() + offset + size,
                                               [](bool written) { return written; });
+            const u64 block_begin = (offset / 64) * 64;
+            const u64 block_end = ((offset + size + 63) / 64) * 64;
+            const bool block_overlaps = size != 0 &&
+                std::any_of(used.begin() + block_begin, used.begin() + block_end,
+                            [](bool written) { return written; });
             CAPTURE(step, offset, size);
             REQUIRE((!overlaps || tracker.IsUsed(offset, size)));
+            REQUIRE(tracker.IsUsed(offset, size) == block_overlaps);
         }
     }
 }
