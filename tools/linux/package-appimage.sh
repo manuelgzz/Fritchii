@@ -88,7 +88,7 @@ export ARCH="$arch"
 # distributions do not necessarily install them. Keep GPU drivers on the host.
 extra_libraries=()
 for library in libusb-1.0.so.0 libOpenGL.so.0 libharfbuzz.so.0 libfribidi.so.0 libfontconfig.so.1 libasound.so.2; do
-    library_path=$(ldconfig -p | awk -v name="$library" '$1 == name {print $NF; exit}')
+    library_path=$(ldconfig -p | awk -v name="$library" '$1 == name && !found {print $NF; found=1}')
     test -n "$library_path"
     extra_libraries+=(--library "$library_path")
 done
