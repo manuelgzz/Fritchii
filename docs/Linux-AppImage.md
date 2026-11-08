@@ -79,7 +79,9 @@ chmod +x Fritchii-v4.1-Linux-x86_64.AppImage
 ```
 
 For systems without FUSE, set `APPIMAGE_EXTRACT_AND_RUN=1`. The host still needs
-a compatible GPU driver, Vulkan loader and the desktop's font configuration/fonts.
+a compatible GPU driver, Vulkan loader, Fontconfig/fonts, and VAAPI/VDPAU loaders
+from the host. Fontconfig and video-driver loaders are kept with their matching
+system configuration and driver paths; Ubuntu copies are not bundled.
 No games, keys, firmware or NVIDIA
 proprietary runtime files are bundled.
 
@@ -87,3 +89,11 @@ The CI workflow also starts the packaged X11 GUI under Xvfb with isolated user
 data, then repeats startup as another user in a minimal Ubuntu container without
 system Qt or development packages. Wayland and real GPU/gameplay behavior still require a physical check.
 See the [ROG Ally test guide](Pruebas-ROG-Ally.md) for that next step.
+
+The Bazzite follow-up includes an opt-in AV1/VAAPI trial:
+`EDEN_NX2_AV1_VAAPI=1 ./Fritchii-v4.1-Linux-x86_64.AppImage`, with NVDEC emulation
+set to GPU. The default remains software AV1. The trial selects FFmpeg's native
+AV1 hardware decoder and falls back to the default decoder if VAAPI cannot
+initialize. It requires a physical playback check; hardware frame decoding is
+not validated by a successful device initialization alone. See
+[the Bazzite video notes](Bazzite-video-2026-11-08.md).

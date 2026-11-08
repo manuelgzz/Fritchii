@@ -79,6 +79,14 @@ jobs:
               /src/build/appimage-output/Fritchii-v4.1-Linux-x86_64.AppImage /tmp/gui.log
             cat /tmp/gui.log
           ' > build/appimage-output/clean-runtime-check.log 2>&1
+      - name: Check modern Fedora font rules against bundled libraries
+        run: |
+          docker run --rm -v "$PWD:/src:ro" registry.fedoraproject.org/fedora-minimal:45 sh -eu -c '
+            dnf -y install python3 fontconfig dejavu-sans-fonts
+            cd /tmp
+            /src/build/appimage-output/Fritchii-v4.1-Linux-x86_64.AppImage --appimage-extract > /dev/null
+            python3 /src/tools/linux/check-fontconfig.py /tmp/squashfs-root
+          ' > build/appimage-output/fontconfig-modern-check.log 2>&1
       - name: Upload AppImage and provenance
         uses: actions/upload-artifact@v4
         with:
