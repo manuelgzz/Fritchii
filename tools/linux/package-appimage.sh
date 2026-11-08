@@ -51,6 +51,7 @@ cp "$source_dir/LICENSE.txt" "$app_dir/usr/share/doc/fritchii/"
 cp -a "$source_dir/LICENSES" "$app_dir/usr/share/doc/fritchii/"
 cp "$source_dir/externals/FidelityFX-SDK/LICENSE.txt" \
     "$app_dir/usr/share/doc/fritchii/LICENSE-FidelityFX-SDK.txt"
+chmod -R a+rX "$app_dir/usr/share/doc/fritchii"
 desktop="$tools_dir/io.github.zortos293.lichii.desktop"
 cp "$source_dir/dist/io.github.zortos293.lichii.desktop" "$desktop"
 sed -i 's/^Name=Lichii$/Name=Fritchii/; s/^Keywords=.*/Keywords=Nintendo;Switch;Fritchii;Lichii;/' \
