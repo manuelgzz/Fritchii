@@ -67,6 +67,17 @@ jobs:
           xvfb-run -a python3 tools/linux/smoke-appimage.py \
             build/appimage-output/Fritchii-v*-Linux-x86_64.AppImage \
             build/appimage-output/gui-startup.log
+      - name: Check startup without system Qt or development packages
+        run: |
+          docker run --rm -v "$PWD:/src:ro" ubuntu:24.04 bash -eu -c '
+            apt-get update -qq
+            apt-get install -y --no-install-recommends xvfb xauth python3 \
+              libgl1 libegl1 libvulkan1 mesa-vulkan-drivers libxkbcommon0 \
+              libxkbcommon-x11-0 libxcb-cursor0 fontconfig-config fonts-dejavu-core
+            runuser -u nobody -- xvfb-run -a python3 /src/tools/linux/smoke-appimage.py \
+              /src/build/appimage-output/Fritchii-v4.1-Linux-x86_64.AppImage /tmp/gui.log
+            cat /tmp/gui.log
+          ' > build/appimage-output/clean-runtime-check.log 2>&1
       - name: Upload AppImage and provenance
         uses: actions/upload-artifact@v4
         with:

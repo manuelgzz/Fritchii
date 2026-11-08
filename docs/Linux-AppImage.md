@@ -79,9 +79,11 @@ chmod +x Fritchii-v4.1-Linux-x86_64.AppImage
 ```
 
 For systems without FUSE, set `APPIMAGE_EXTRACT_AND_RUN=1`. The host still needs
-a compatible GPU driver and Vulkan loader. No games, keys, firmware or NVIDIA
+a compatible GPU driver, Vulkan loader and the desktop's font configuration/fonts.
+No games, keys, firmware or NVIDIA
 proprietary runtime files are bundled.
 
 The CI workflow also starts the packaged X11 GUI under Xvfb with isolated user
-data. Wayland and real GPU/gameplay behavior still require a physical check.
+data, then repeats startup as another user in a minimal Ubuntu container without
+system Qt or development packages. Wayland and real GPU/gameplay behavior still require a physical check.
 See the [ROG Ally test guide](Pruebas-ROG-Ally.md) for that next step.
