@@ -51,3 +51,20 @@ No se han añadido parches gráficos especulativos.
 
 Los cambios están exclusivamente en la rama `linux-appimage` de
 `manuelgzz/Fritchii`. No se han enviado pull requests al repositorio original.
+
+## Compilación independiente en GitHub
+
+La [ejecución 42484091157](https://github.com/manuelgzz/Fritchii/actions/runs/42484091157)
+terminó correctamente en 1 h 13 min. Pasaron la compilación, las pruebas, el
+empaquetado y las dos comprobaciones X11, incluida la del contenedor mínimo sin
+Qt del sistema y con un usuario distinto.
+
+[Descargar el ZIP del AppImage validado](https://github.com/manuelgzz/Fritchii/actions/runs/42484091157/artifacts/13620589550).
+El ZIP contiene el AppImage, su checksum, la información de compilación y los
+registros. Requiere iniciar sesión en GitHub. La revisión compilada por esa
+ejecución es `83d7352a67692f971b9e427ec8a84192a29341c3`; los cambios posteriores
+son documentación y el drenaje de la salida de `ldconfig` durante el empaquetado,
+sin cambios adicionales del código del emulador. La repetición que estaba en
+cola se canceló al completarse esta validación.
+
+El siguiente paso es la [prueba física en Bazzite](Pruebas-ROG-Ally.md#bazzite).
