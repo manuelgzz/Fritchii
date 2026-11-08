@@ -67,3 +67,17 @@ Se revisaron el archivo de FFmpeg de Eglantine/nx2, sus PRs e incidencias y la
 rama `fix/mingw-ffmpeg-av1` (PR 675). Ese cambio añade dav1d al paquete MinGW;
 no resuelve la selección de AV1 hardware ni las rutas de Bazzite. No se enviaron
 pull requests al proyecto original.
+
+## Descarga de la revisión validada
+
+[Descargar el ZIP para Bazzite](https://github.com/manuelgzz/Fritchii/actions/runs/42492662409/artifacts/13624291915)
+(inicia sesión en GitHub). Extrae en una carpeta nueva y verifica el `.sha256`
+que acompaña a esta descarga.
+
+La [compilación de GitHub](https://github.com/manuelgzz/Fritchii/actions/runs/42492662409)
+terminó correctamente en 59 min 15 s: compilación, pruebas, empaquetado y dos
+comprobaciones de arranque X11, incluida la del contenedor mínimo sin Qt. Su
+revisión del código es `a157361219470320f06ba44d1236d9168c9ef949`. Las adiciones
+posteriores son documentación y el comprobador de Fontconfig para futuras
+ejecuciones; la prueba con el AppImage extraído en la imagen oficial de Fedora 45
+se realizó localmente y pasó con Fontconfig 2.18.3.

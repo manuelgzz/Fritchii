@@ -1,5 +1,8 @@
 # Fritchii for Linux
 
+[Download the validated Bazzite follow-up (8 November 2026)](https://github.com/manuelgzz/Fritchii/actions/runs/42492662409/artifacts/13624291915).
+See [the Bazzite video notes](Bazzite-video-2026-11-08.md) for fixes and the optional AV1/VAAPI trial.
+
 This fork builds Fritchii **v4.1**, including the complete source history of the
 Windows release `f6d42b87150678e001dbeb84679a9595935ce951` (8 November 2026).
 The original default branch `nx2` predates that release; building it alone misses
