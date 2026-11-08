@@ -29,10 +29,8 @@ fi
 for tool in linuxdeploy linuxdeploy-plugin-qt; do
     target="$tools_dir/$tool-$arch.AppImage"
     if [[ ! -s "$target" ]]; then
-        curl --fail --location --retry 3 \
-            "https://github.com/linuxdeploy/$tool/releases/download/continuous/$tool-$arch.AppImage" \
-            --output "$target.part"
-        mv "$target.part" "$target"
+        python3 "$source_dir/tools/linux/fetch-release-asset.py" \
+            "linuxdeploy/$tool" continuous "$tool-$arch.AppImage" "$target"
     fi
     chmod +x "$target"
 done

@@ -21,13 +21,14 @@ gameplay and performance still depend on the Linux GPU driver and require testin
   hooks are platform-specific. Automatic updates are disabled for this AppImage:
   the upstream update sources serve other forks or Windows packages. Download
   updates from this fork's releases instead.
-- The generic x86_64 build avoids `-march=native`. It is not the Windows PGO build
-  and does not claim the same performance.
+- The generic x86_64 build uses Clang ThinLTO and lld, and avoids `-march=native`.
+  It is not the Windows PGO build and does not claim the same performance. The
+  repository's PGO profile needs a newer LLVM reader than Ubuntu's Clang 18.
 
 ## Build
 
 Build on Ubuntu 24.04 (glibc 2.39) for an AppImage targeting that baseline. Use
-CMake 3.31+, Clang, Ninja, Python, pkg-config and the development dependencies in
+CMake 3.31+, Clang, LLVM tools, lld, Ninja, patch, Python, pkg-config and the development dependencies in
 [Deps.md](Deps.md). Install Qt Charts, Qt tools, Qt Wayland and
 `qt6-wayland-dev`, as well as FFmpeg, PulseAudio/ALSA, libudev, libusb, OpenSSL,
 Boost context/fiber, glslang and SPIR-V tools. The build downloads additional
@@ -45,7 +46,9 @@ The script builds the GUI, CLI and unit tests, runs CTest, then packages Qt,
 Wayland/X11 platform plugins, shared dependencies and license notices using
 linuxdeploy. It writes the AppImage, SHA-256 checksum and build provenance to
 `build/appimage-output`. Packaging tools are cached in the build directory; their
-hashes are recorded in the build information.
+hashes are recorded in the build information. Downloads can use GitHub's public
+release-asset API when browser download URLs fail; the pinned dependency hashes
+are still checked, and packaging-tool digests are checked when GitHub provides them.
 
 To package an already-tested build:
 

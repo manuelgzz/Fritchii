@@ -17,6 +17,7 @@ cmake -S "$source_dir" -B "$build_dir" -G Ninja \
     -DYUZU_USE_BUNDLED_QT=OFF -DYUZU_USE_BUNDLED_SDL3=ON \
     -DVulkanHeaders_FORCE_BUNDLED=ON -DVulkanUtilityLibraries_FORCE_BUNDLED=ON \
     -DYUZU_BUILD_PRESET=generic \
+    -DENABLE_LTO=ON -DUSE_FASTER_LINKER=ON \
     -DENABLE_UPDATE_CHECKER=OFF \
     "$@"
 cmake --build "$build_dir" --target yuzu yuzu-cmd tests update_checker_tests --parallel "$jobs"
