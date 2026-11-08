@@ -19,6 +19,11 @@ void SetOtherBuildValues(Settings::Values& values) {
     values.memory_layout_mode.SetValue(Settings::MemoryLayout::Memory_4Gb);
     values.nvdec_emulation.SetValue(Settings::NvdecEmulation::Cpu);
     values.scaling_filter.SetValue(Settings::ScalingFilter::Fsr3);
+    values.resolution_setup.SetValue(Settings::ResolutionSetup::Res2X);
+    values.anti_aliasing.SetValue(Settings::AntiAliasing::None);
+    values.cpu_accuracy.SetValue(Settings::CpuAccuracy::Accurate);
+    values.use_disk_shader_cache.SetValue(false);
+    values.use_vulkan_driver_pipeline_cache.SetValue(false);
 }
 
 void CheckFriztiValues(const Settings::Values& values) {
@@ -32,6 +37,11 @@ void CheckFriztiValues(const Settings::Values& values) {
     CHECK(values.memory_layout_mode.GetValue() == Settings::MemoryLayout::Memory_8Gb);
     CHECK(values.nvdec_emulation.GetValue() == Settings::NvdecEmulation::Gpu);
     CHECK(values.scaling_filter.GetValue() == Settings::ScalingFilter::ScaleForce);
+    CHECK(values.resolution_setup.GetValue() == Settings::ResolutionSetup::Res1X);
+    CHECK(values.anti_aliasing.GetValue() == Settings::AntiAliasing::Fxaa);
+    CHECK(values.cpu_accuracy.GetValue() == Settings::CpuAccuracy::Auto);
+    CHECK(values.use_disk_shader_cache.GetValue());
+    CHECK(values.use_vulkan_driver_pipeline_cache.GetValue());
 }
 } // namespace
 

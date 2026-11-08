@@ -175,6 +175,10 @@ if (TARGET dynarmic::dynarmic)
 endif()
 
 add_test(NAME tests COMMAND tests)
+add_test(NAME spirv_global_helpers_noinline COMMAND tests
+    "SPIR-V global memory helpers follow the inline control")
+set_tests_properties(spirv_global_helpers_noinline PROPERTIES
+    ENVIRONMENT "EDEN_NX2_SPIRV_INLINE_GLOBALS=0")
 
 if (WIN32 AND ARCHITECTURE_x86_64)
     add_executable(event_wait_probe ../../tools/nx2/event_wait_probe.cpp)

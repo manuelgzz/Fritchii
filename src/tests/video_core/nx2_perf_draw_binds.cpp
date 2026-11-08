@@ -21,27 +21,20 @@
 
 namespace {
 
-// UsageTracker::Track before the full-page run (Nx2Perf off).
-class OldUsageTracker {
+// Per-page reference with scalar coverage of partially touched 64-byte blocks.
+class ReferenceUsageTracker {
     static constexpr size_t BUFFER_BYTES_PER_BITSHIFT = 6;
     static constexpr size_t BUFFER_PAGE_SHIFT = 6 + BUFFER_BYTES_PER_BITSHIFT;
     static constexpr size_t BUFFER_PAGE_BYTES = 1 << BUFFER_PAGE_SHIFT;
 
 public:
-    explicit OldUsageTracker(size_t size) : pages((size >> BUFFER_PAGE_SHIFT) + 1, 0ULL) {}
+    explicit ReferenceUsageTracker(size_t size) : pages((size >> BUFFER_PAGE_SHIFT) + 1, 0ULL) {}
 
     void Reset() noexcept {
         std::ranges::fill(pages, 0ULL);
-        recent.fill({~u64{0}, 0});
     }
 
     void Track(u64 offset, u64 size) noexcept {
-        for (const auto& [recent_offset, recent_size] : recent) {
-            if (recent_offset == offset && recent_size == size) {
-                return;
-            }
-        }
-        recent[recent_cursor++ % recent.size()] = {offset, size};
         const size_t page = offset >> BUFFER_PAGE_SHIFT;
         const size_t page_end = (offset + size) >> BUFFER_PAGE_SHIFT;
         if (page_end < page || page_end >= pages.size()) {
@@ -63,15 +56,15 @@ public:
 
 private:
     void TrackPage(u64 page, u64 offset, u64 size) noexcept {
-        const size_t offset_in_page = offset % BUFFER_PAGE_BYTES;
-        const size_t first_bit = offset_in_page >> BUFFER_BYTES_PER_BITSHIFT;
-        const size_t num_bits = std::min<size_t>(size, BUFFER_PAGE_BYTES) >> BUFFER_BYTES_PER_BITSHIFT;
-        const size_t mask = ~u64{0} >> (64 - num_bits);
-        pages[page] |= (~u64{0} & mask) << first_bit;
+        if (size == 0) {
+            return;
+        }
+        const u64 end = std::min(offset + size, (page + 1) * BUFFER_PAGE_BYTES);
+        for (u64 block = offset >> BUFFER_BYTES_PER_BITSHIFT;
+             (block << BUFFER_BYTES_PER_BITSHIFT) < end; ++block) {
+            pages[page] |= u64{1} << (block % 64);
+        }
     }
-
-    std::array<std::pair<u64, u64>, 4> recent{{{~u64{0}, 0}, {~u64{0}, 0}, {~u64{0}, 0}, {~u64{0}, 0}}};
-    size_t recent_cursor{};
 };
 
 class FakeRasterizer {
@@ -152,7 +145,7 @@ TEST_CASE("Nx2Perf draw-binds: usage survives slot relocation and reset", "[vide
     REQUIRE(std::ranges::equal(slots[id].Pages(), before));
     slots[id].Reset();
     REQUIRE(std::ranges::all_of(slots[id].Pages(), [](u64 word) { return word == 0; }));
-    OldUsageTracker old{size};
+    ReferenceUsageTracker old{size};
     for (u64 i = 0; i < 8; ++i) {
         slots[id].Track(i * PAGE, 2 * WORD + 64);
         old.Track(i * PAGE, 2 * WORD + 64);
@@ -195,12 +188,36 @@ TEST_CASE("Nx2Perf draw-binds: clean words survive manager pool growth", "[video
     REQUIRE(DirtyUpload(*dirty, BASE, 65 * MANAGER).empty());
 }
 
-TEST_CASE("Nx2Perf draw-binds: UsageTracker run matches the old Track", "[video_core]") {
+TEST_CASE("UsageTracker covers partial blocks and page boundaries", "[video_core][usage_tracker]") {
+    VideoCommon::UsageTracker tracker{2 * PAGE};
+    tracker.Track(16, 16);
+    CHECK(tracker.Pages()[0] == 1);
+    CHECK(tracker.IsUsed(0, 1));
+    CHECK_FALSE(tracker.IsUsed(64, 1));
+    tracker.Reset();
+    tracker.Track(63, 2);
+    CHECK(tracker.Pages()[0] == 3);
+    tracker.Reset();
+    tracker.Track(PAGE - 1, 1);
+    CHECK(tracker.Pages()[0] == (u64{1} << 63));
+    CHECK(tracker.Pages()[1] == 0);
+    CHECK_FALSE(tracker.IsUsed(PAGE, 1));
+    tracker.Reset();
+    tracker.Track(PAGE - 1, 2);
+    CHECK(tracker.Pages()[0] == (u64{1} << 63));
+    CHECK(tracker.Pages()[1] == 1);
+    CHECK(tracker.IsUsed(PAGE, 1));
+    tracker.Reset();
+    tracker.Track(0, 0);
+    CHECK(std::ranges::all_of(tracker.Pages(), [](u64 word) { return word == 0; }));
+}
+
+TEST_CASE("Nx2Perf draw-binds: UsageTracker run matches a per-page reference", "[video_core]") {
     REQUIRE(VideoCommon::Nx2Perf::Enabled());
     constexpr u64 buffer_size = 24ULL << 20;
     std::mt19937_64 rng{0x0400486024DEC000ULL};
     VideoCommon::UsageTracker tracker{buffer_size};
-    OldUsageTracker old{buffer_size};
+    ReferenceUsageTracker old{buffer_size};
     const auto random_range = [&]() -> std::pair<u64, u64> {
         static constexpr u64 sizes[] = {16, 64, 100, 256, 4096, 6000, 65536, 1ULL << 20, 8ULL << 20};
         const u64 size = sizes[rng() % std::size(sizes)] + (rng() % 2 == 0 ? 0 : rng() % 8192);
