@@ -133,7 +133,8 @@ public:
     YUZU_NON_COPYABLE(Decoder);
     YUZU_NON_MOVEABLE(Decoder);
 
-    explicit Decoder(Tegra::Host1x::NvdecCommon::VideoCodec codec);
+    explicit Decoder(Tegra::Host1x::NvdecCommon::VideoCodec codec,
+                     bool prefer_av1_hardware = false);
     ~Decoder() = default;
 
     bool SupportsDecodingOnDevice(AVPixelFormat* out_pix_fmt, AVHWDeviceType type) const;
@@ -178,7 +179,7 @@ public:
     explicit DecoderContext(const Decoder& decoder);
     ~DecoderContext();
 
-    void InitializeHardwareDecoder(const HardwareContext& context, AVPixelFormat hw_pix_fmt);
+    void InitializeHardwareDecoder(AVBufferRef* device, AVPixelFormat hw_pix_fmt);
     bool OpenContext(const Decoder& decoder, std::span<const u8> extradata = {});
     bool SendPacket(const Packet& packet);
     std::shared_ptr<Frame> ReceiveFrame();

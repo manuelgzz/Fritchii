@@ -73,7 +73,8 @@ jobs:
             apt-get update -qq
             apt-get install -y --no-install-recommends xvfb xauth python3 \
               libgl1 libegl1 libvulkan1 mesa-vulkan-drivers libxkbcommon0 \
-              libxkbcommon-x11-0 libxcb-cursor0 fontconfig-config fonts-dejavu-core
+              libxkbcommon-x11-0 libxcb-cursor0 libfontconfig1 fonts-dejavu-core \
+              libva2 libva-drm2 libva-x11-2 libvdpau1
             runuser -u nobody -- xvfb-run -a python3 /src/tools/linux/smoke-appimage.py \
               /src/build/appimage-output/Fritchii-v4.1-Linux-x86_64.AppImage /tmp/gui.log
             cat /tmp/gui.log

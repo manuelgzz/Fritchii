@@ -87,13 +87,16 @@ export ARCH="$arch"
 # linuxdeploy excludes these desktop libraries by default, but minimal gaming
 # distributions do not necessarily install them. Keep GPU drivers on the host.
 extra_libraries=()
-for library in libusb-1.0.so.0 libOpenGL.so.0 libharfbuzz.so.0 libfribidi.so.0 libfontconfig.so.1 libasound.so.2; do
+for library in libusb-1.0.so.0 libOpenGL.so.0 libharfbuzz.so.0 libfribidi.so.0 libasound.so.2; do
     library_path=$(ldconfig -p | awk -v name="$library" '$1 == name && !found {print $NF; found=1}')
     test -n "$library_path"
     extra_libraries+=(--library "$library_path")
 done
 "$tools_dir/linuxdeploy-$arch.AppImage" --appdir "$app_dir" \
     "${extra_libraries[@]}" \
+    --exclude-library 'libfontconfig.so*' \
+    --exclude-library 'libva.so*' --exclude-library 'libva-drm.so*' \
+    --exclude-library 'libva-x11.so*' --exclude-library 'libvdpau.so*' \
     --executable "$build_dir/bin/lichii" \
     --executable "$build_dir/bin/eden-cli" \
     --desktop-file "$desktop" \

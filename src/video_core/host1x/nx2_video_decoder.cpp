@@ -36,7 +36,7 @@ std::optional<NvdecCommon::VideoCodec> CodecFromMime(std::string_view mime) {
     if (mime.find("vp8") != std::string_view::npos) {
         return NvdecCommon::VideoCodec::VP8;
     }
-    // "video/av01" or "video/av1". FFmpeg decodes AV1 with libdav1d.
+    // "video/av01" or "video/av1".
     if (mime.find("av01") != std::string_view::npos || mime.find("av1") != std::string_view::npos) {
         return NvdecCommon::VideoCodec::AV1;
     }
@@ -134,17 +134,39 @@ Nx2VideoDecoder::Nx2VideoDecoder(std::string_view mime) : impl{std::make_unique<
         LOG_ERROR(HW_GPU, "nx2 video: no decoder for codec \"{}\"", mime);
         return;
     }
-    impl->decoder.emplace(*codec);
-    if (impl->decoder->GetCodec() == nullptr) {
-        LOG_ERROR(HW_GPU, "nx2 video: FFmpeg has no decoder for \"{}\"", mime);
-        return;
+    const bool gpu_requested =
+        Settings::values.nvdec_emulation.GetValue() == Settings::NvdecEmulation::Gpu;
+    bool prefer_av1_hardware = false;
+#if defined(__linux__) && !defined(__ANDROID__)
+    prefer_av1_hardware = gpu_requested && *codec == NvdecCommon::VideoCodec::AV1;
+#endif
+    const auto open_decoder = [&](bool prefer_hardware) {
+        impl->context.reset();
+        impl->hardware.reset();
+        impl->decoder.emplace(*codec, prefer_hardware);
+        if (!impl->decoder->GetCodec()) {
+            LOG_ERROR(HW_GPU, "nx2 video: FFmpeg has no decoder for \"{}\"", mime);
+            return false;
+        }
+        impl->context.emplace(*impl->decoder);
+        bool hardware_ready = false;
+        if (gpu_requested) {
+            impl->hardware.emplace();
+            hardware_ready = impl->hardware->InitializeForDecoder(*impl->context, *impl->decoder);
+        }
+        if (prefer_hardware && !hardware_ready) {
+            return false;
+        }
+        return impl->context->OpenContext(*impl->decoder);
+    };
+    impl->open = open_decoder(prefer_av1_hardware);
+    if (!impl->open && prefer_av1_hardware) {
+        LOG_INFO(HW_GPU, "nx2 video: AV1 hardware initialization unavailable; using CPU decoding");
+        impl->open = open_decoder(false);
     }
-    impl->context.emplace(*impl->decoder);
-    if (Settings::values.nvdec_emulation.GetValue() == Settings::NvdecEmulation::Gpu) {
-        impl->hardware.emplace();
-        impl->hardware->InitializeForDecoder(*impl->context, *impl->decoder);
+    if (impl->open) {
+        LOG_INFO(HW_GPU, "nx2 video: selected decoder {}", impl->decoder->GetCodec()->name);
     }
-    impl->open = impl->context->OpenContext(*impl->decoder);
     LOG_INFO(HW_GPU, "nx2 video: decoder for \"{}\" {}", mime, impl->open ? "open" : "failed to open");
 }
 
