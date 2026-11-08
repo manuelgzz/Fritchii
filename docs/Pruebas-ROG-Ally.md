@@ -28,6 +28,29 @@ chmod +x Fritchii-v4.1-Linux-x86_64.AppImage
 Si no hay FUSE, usa `APPIMAGE_EXTRACT_AND_RUN=1` delante del último comando.
 El host debe proporcionar un controlador Vulkan funcional.
 
+## Bazzite
+
+Haz la primera configuración en **modo escritorio**. Extrae el ZIP descargado de
+GitHub Actions, abre una terminal en esa carpeta y ejecuta los comandos anteriores.
+Comprueba la versión del sistema con `getconf GNU_LIBC_VERSION`: debe ser 2.39 o
+posterior. El AppImage utiliza los controladores Mesa/Vulkan de Bazzite; no requiere
+modificar la imagen del sistema para instalar Qt.
+
+En los ajustes del emulador selecciona Vulkan y la GPU AMD integrada. Configura
+los controles con el dispositivo que detecte SDL y comprueba los botones antes de
+abrir el juego. Completa también los diálogos de primera ejecución en el escritorio.
+
+Después añade el AppImage a Steam como juego externo y pruébalo en **modo juego**,
+con el mismo TDP y ajustes. Es una aplicación Linux nativa: deja desactivada la
+compatibilidad con Proton para ese acceso. Si usas la alternativa sin FUSE, las
+opciones de lanzamiento de Steam son `APPIMAGE_EXTRACT_AND_RUN=1 %command%`.
+
+Compara ambas sesiones: imagen, foco de ventana, pantalla completa, controles y
+suspensión/reanudación. Si aparece un problema de ventana únicamente en modo juego,
+una comparación con `QT_QPA_PLATFORM=xcb %command%` permite probar XWayland. Anota
+el resultado y conserva los registros de ambas sesiones antes de cambiar otros
+ajustes; es una comprobación de diagnóstico, no un requisito de lanzamiento.
+
 ## Ocarina of Time
 
 Empieza con Vulkan, resolución 1x y los ajustes que aplica Fritchii. El primer
