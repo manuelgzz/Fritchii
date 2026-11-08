@@ -21,9 +21,15 @@ gameplay and performance still depend on the Linux GPU driver and require testin
   hooks are platform-specific. Automatic updates are disabled for this AppImage:
   the upstream update sources serve other forks or Windows packages. Download
   updates from this fork's releases instead.
-- Windows CPU topology/pinning and the DWM display-refresh query are also guarded
-  by Win32 checks upstream. Linux keeps its existing scheduling/presentation paths;
-  matching those optimizations needs a Linux implementation and hardware benchmarks.
+- Linux CPU topology/pinning is imported from [Frizti/Fritchii PR #15](https://github.com/Frizti/Fritchii/pull/15),
+  commits `999c697698`, `f7034fe481` and `9e1ff9ecc7` by Leonardo Chappuis. It reuses
+  the Windows planner, reads sysfs topology and applies affinity with
+  `sched_setaffinity`. Auto mode needs enough physical cores; `EDEN_NX2_PIN_THREADS=0`
+  disables it. A Linux test checks restricting and restoring a worker's affinity.
+  Performance on the Ally still requires a hardware comparison.
+- The DWM display-refresh query remains Windows-specific. Linux retains its
+  existing presentation behavior; matching that optimization needs a Linux
+  implementation and hardware measurements.
 - The generic x86_64 build uses LLVM 23, the repository's PGO profile, ThinLTO and
   lld, and avoids `-march=native`. It does not claim the same performance as
   Windows. Clang 18 crashes on the current ioctl templates and cannot read the

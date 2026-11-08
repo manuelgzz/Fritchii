@@ -7,9 +7,9 @@ proceso de compilación para Linux. Requiere glibc 2.39 o posterior.
 Las pruebas de compilación, shaders y arranque de la interfaz en una pantalla
 virtual no sustituyen una prueba con la GPU AMD, su controlador y el juego.
 NVIDIA DLSS mediante Streamline no está disponible en esta versión para Linux.
-La asignación de hilos a núcleos y la consulta de refresco mediante DWM también
-son específicas de Windows; no se presume que sus mejoras de rendimiento se
-reproduzcan automáticamente en Linux.
+La asignación de hilos a núcleos incorpora el port de Linux del PR #15 de Frizti.
+Su rendimiento en la Ally debe compararse con la afinidad desactivada. La consulta
+de refresco mediante DWM sigue siendo específica de Windows.
 
 ## Antes de empezar
 
@@ -47,6 +47,11 @@ que todos los modelos puedan sostener 60 FPS.
 6. Reproduce una cinemática para comprobar imagen, sonido y sincronización.
 7. Guarda, cierra y vuelve a abrir: verifica partidas, ajustes y reutilización de
    cachés. Prueba también pantalla completa y, si lo utilizas, suspensión/reanudación.
+8. Repite la misma ruta con afinidad automática y con
+   `EDEN_NX2_PIN_THREADS=0 ./Fritchii-v4.1-Linux-x86_64.AppImage`. Compara sobre
+   todo los tirones y tiempos de fotograma, manteniendo TDP y ajustes iguales.
+   La afinidad automática solo se activa cuando la topología cumple los mínimos
+   del planificador; el registro indica el plan elegido.
 
 ## Qué enviar si falla
 
