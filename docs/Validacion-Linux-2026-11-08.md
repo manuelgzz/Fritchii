@@ -31,6 +31,10 @@ el archivo `.sha256` que acompaña a cada descarga.
   como UID 1001, distinto del constructor. Controlador Vulkan de software Mesa;
   fuentes y configuración de Fontconfig del sistema. Log de aplicación vacío,
   sin errores de bibliotecas faltantes ni avisos de Fontconfig.
+- Arranque adicional nativo Wayland: Weston headless con renderer Pixman; el
+  protocolo confirmó `xdg_toplevel.set_title` de Fritchii y el proceso permaneció
+  activo. El entorno sin GPU produjo avisos EGL/Mesa; esto no valida EGL ni juegos
+  sobre AMD. La comprobación X11 limpia se realizó antes de instalar Weston.
 - Checksum verificado después del empaquetado final.
 
 La prueba limpia detectó dependencias excluidas por defecto por linuxdeploy:
