@@ -47,10 +47,20 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/build-tools"
           "$RUNNER_TEMP/build-tools/bin/pip" install cmake==3.31.6
           echo "$RUNNER_TEMP/build-tools/bin" >> "$GITHUB_PATH"
+      - name: Cache pinned source dependencies
+        uses: actions/cache@v4
+        with:
+          path: .cache/cpm
+          key: linux-appimage-cpm-${{ runner.arch }}-${{ hashFiles('cpmfile.json', 'CMakeModules/CPMUtil.cmake') }}
       - name: Build, test and package
         env:
           BUILD_JOBS: '2'
         run: bash tools/linux/build-appimage.sh
+      - name: Check packaged GUI startup
+        run: |
+          xvfb-run -a python3 tools/linux/smoke-appimage.py \
+            build/appimage-output/Fritchii-v*-Linux-x86_64.AppImage \
+            build/appimage-output/gui-startup.log
       - name: Upload AppImage and provenance
         uses: actions/upload-artifact@v4
         with:
