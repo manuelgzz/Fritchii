@@ -158,7 +158,8 @@ public:
     explicit HardwareContext() = default;
     ~HardwareContext();
 
-    bool InitializeForDecoder(DecoderContext& decoder_context, const Decoder& decoder);
+    bool InitializeForDecoder(DecoderContext& decoder_context, const Decoder& decoder,
+                              AVHWDeviceType required_type = AV_HWDEVICE_TYPE_NONE);
 
     AVBufferRef* GetBufferRef() const {
         return m_gpu_decoder;

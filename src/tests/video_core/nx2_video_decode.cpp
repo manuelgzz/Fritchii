@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <array>
+#include <cstdlib>
+#include <optional>
+#include <string>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include "common/settings.h"
@@ -19,6 +22,30 @@ constexpr std::array<u8, 36> RedAv1{
     0x00, 0x03, 0xce, 0x22, 0x3d, 0x26, 0xa6, 0x53, 0x75, 0x43, 0xa9, 0x40,
 };
 
+struct Av1VaapiMode {
+    std::optional<std::string> previous;
+    explicit Av1VaapiMode(const char* mode) {
+        if (const char* value = std::getenv("EDEN_NX2_AV1_VAAPI")) {
+            previous = value;
+        }
+        Set(mode);
+    }
+    static void Set(const char* value) {
+#ifdef _WIN32
+        _putenv_s("EDEN_NX2_AV1_VAAPI", value ? value : "");
+#else
+        if (value) {
+            setenv("EDEN_NX2_AV1_VAAPI", value, 1);
+        } else {
+            unsetenv("EDEN_NX2_AV1_VAAPI");
+        }
+#endif
+    }
+    ~Av1VaapiMode() {
+        Set(previous ? previous->c_str() : nullptr);
+    }
+};
+
 struct RestoreDecoderSetting {
     Settings::NvdecEmulation value{Settings::values.nvdec_emulation.GetValue()};
     ~RestoreDecoderSetting() {
@@ -30,28 +57,32 @@ struct RestoreDecoderSetting {
 TEST_CASE("NX2 AV1 decodes synthetic frames with CPU and GPU preferences",
           "[video_core][ffmpeg][av1]") {
     RestoreDecoderSetting restore;
-    for (const auto mode : {Settings::NvdecEmulation::Cpu, Settings::NvdecEmulation::Gpu}) {
-        CAPTURE(static_cast<int>(mode));
-        Settings::values.nvdec_emulation.SetValue(mode);
-        Tegra::Host1x::Nx2VideoDecoder decoder{"video/av01"};
-        REQUIRE(decoder.IsOpen());
-        std::vector<Tegra::Host1x::Nx2Picture> pictures;
-        decoder.Decode(RedAv1, 12345, pictures);
-        decoder.Drain(pictures);
-        REQUIRE(pictures.size() == 1);
-        REQUIRE(pictures[0].width == 64);
-        REQUIRE(pictures[0].height == 64);
-        REQUIRE(pictures[0].pts == 12345);
-        const auto* frame = pictures[0].frame->GetFrame();
-        REQUIRE(frame->data[0][0] >= 80);
-        REQUIRE(frame->data[0][0] <= 82);
-        std::array<u8, 64 * 64 * 4> rgba{};
-        decoder.Render(pictures[0], Tegra::Host1x::Nx2PictureFormat::Rgba8,
-                       64, 64, 64 * 4, 0, rgba);
-        REQUIRE(rgba[0] >= 250);
-        REQUIRE(rgba[1] <= 4);
-        REQUIRE(rgba[2] <= 4);
-        REQUIRE(rgba[3] == 255);
+    for (const auto* av1_mode : {"0", "1"}) {
+        Av1VaapiMode environment{av1_mode};
+        CAPTURE(av1_mode);
+        for (const auto mode : {Settings::NvdecEmulation::Cpu, Settings::NvdecEmulation::Gpu}) {
+            CAPTURE(static_cast<int>(mode));
+            Settings::values.nvdec_emulation.SetValue(mode);
+            Tegra::Host1x::Nx2VideoDecoder decoder{"video/av01"};
+            REQUIRE(decoder.IsOpen());
+            std::vector<Tegra::Host1x::Nx2Picture> pictures;
+            decoder.Decode(RedAv1, 12345, pictures);
+            decoder.Drain(pictures);
+            REQUIRE(pictures.size() == 1);
+            REQUIRE(pictures[0].width == 64);
+            REQUIRE(pictures[0].height == 64);
+            REQUIRE(pictures[0].pts == 12345);
+            const auto* frame = pictures[0].frame->GetFrame();
+            REQUIRE(frame->data[0][0] >= 80);
+            REQUIRE(frame->data[0][0] <= 82);
+            std::array<u8, 64 * 64 * 4> rgba{};
+            decoder.Render(pictures[0], Tegra::Host1x::Nx2PictureFormat::Rgba8,
+                           64, 64, 64 * 4, 0, rgba);
+            REQUIRE(rgba[0] >= 250);
+            REQUIRE(rgba[1] <= 4);
+            REQUIRE(rgba[2] <= 4);
+            REQUIRE(rgba[3] == 255);
+        }
     }
 }
 

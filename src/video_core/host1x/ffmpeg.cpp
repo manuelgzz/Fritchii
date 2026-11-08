@@ -235,10 +235,14 @@ HardwareContext::~HardwareContext() {
     av_buffer_unref(&m_gpu_decoder);
 }
 
-bool HardwareContext::InitializeForDecoder(DecoderContext& decoder_context, const Decoder& decoder) {
+bool HardwareContext::InitializeForDecoder(DecoderContext& decoder_context, const Decoder& decoder,
+                                          AVHWDeviceType required_type) {
     const auto supported_types = GetSupportedDeviceTypes();
     for (const auto type : PreferredGpuDecoders) {
         AVPixelFormat hw_pix_fmt;
+        if (required_type != AV_HWDEVICE_TYPE_NONE && type != required_type) {
+            continue;
+        }
 
         if (std::ranges::find(supported_types, type) == supported_types.end()) {
             LOG_DEBUG(HW_GPU, "{} explicitly unsupported", av_hwdevice_get_type_name(type));

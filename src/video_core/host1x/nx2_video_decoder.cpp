@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <array>
+#include <cstdlib>
 #include <cstring>
 #include <optional>
 #include <set>
@@ -138,7 +139,9 @@ Nx2VideoDecoder::Nx2VideoDecoder(std::string_view mime) : impl{std::make_unique<
         Settings::values.nvdec_emulation.GetValue() == Settings::NvdecEmulation::Gpu;
     bool prefer_av1_hardware = false;
 #if defined(__linux__) && !defined(__ANDROID__)
-    prefer_av1_hardware = gpu_requested && *codec == NvdecCommon::VideoCodec::AV1;
+    const char* av1_vaapi = std::getenv("EDEN_NX2_AV1_VAAPI");
+    prefer_av1_hardware = gpu_requested && *codec == NvdecCommon::VideoCodec::AV1 &&
+                          av1_vaapi && std::string_view{av1_vaapi} == "1";
 #endif
     const auto open_decoder = [&](bool prefer_hardware) {
         impl->context.reset();
@@ -152,7 +155,9 @@ Nx2VideoDecoder::Nx2VideoDecoder(std::string_view mime) : impl{std::make_unique<
         bool hardware_ready = false;
         if (gpu_requested) {
             impl->hardware.emplace();
-            hardware_ready = impl->hardware->InitializeForDecoder(*impl->context, *impl->decoder);
+            hardware_ready = impl->hardware->InitializeForDecoder(
+                *impl->context, *impl->decoder,
+                prefer_hardware ? AV_HWDEVICE_TYPE_VAAPI : AV_HWDEVICE_TYPE_NONE);
         }
         if (prefer_hardware && !hardware_ready) {
             return false;
